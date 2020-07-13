@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Tutorial007.API.Services;
+using Services;
+using Services.MailService;
+using Services.UserService;
 using Tutorial007.Shared;
 
 namespace Tutorial007.API.Controllers
@@ -41,15 +44,42 @@ namespace Tutorial007.API.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var result = await _userService.LoginUserAsync(model);
-                if (result.IsSuccess)
+                if (ModelState.IsValid)
                 {
-                    await _mailService.SendEmailAsync(model.Email, "New Login", "<h1>Hey!, New login to your account  noticed</h1><p>New login to your account at " + DateTime.Now + "</p>");
-                    return Ok(result);
+                    var result = await _userService.LoginUserAsync(model);
+                    if (result.IsSuccess)
+                    {
+                        /* SMTP Mail Check */
+                        string mailSubject = "Welcome to Tutorial007";
+                        string password = "Oati@4776";
+                        string mailBody = "<h1>This mail comming from Web Application...</h1>";
+                        MailMessage mailMessage = new MailMessage(model.Email, model.Email, mailSubject, mailBody);
+                        mailMessage.IsBodyHtml = true;
+
+                        SmtpClient client = new SmtpClient();
+                        client.Host = "smtp.gmail.com";
+                        client.Port = 465;
+                        client.UseDefaultCredentials = false;
+                        client.EnableSsl = false;
+                        //client.
+                        client.Credentials = new System.Net.NetworkCredential(model.Email, password);
+                        //client.DeliveryMethod = SmtpDeliveryMethod.PickupDirectoryFromIis;
+                        //client.Send(mailMessage);
+
+
+
+                        //mail sending bypass here
+                        //await client.SendMailAsync(mailMessage);
+                        return Ok(result);
+                    }
+                    return BadRequest(result);
                 }
-                return BadRequest(result);
+            }
+            catch(Exception ex)
+            {
+
             }
             return BadRequest("Some properties is not valid");
         }

@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Tutorial007.API.Models;
-using Tutorial007.API.Services;
-using Tutorial007.Shared;
+using Model;
+using Services;
+using Services.CategoryService;
 
 namespace Tutorial007.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CategoryController : ControllerBase
     {
         private ICategoryService _categoryService;
@@ -49,7 +49,8 @@ namespace Tutorial007.API.Controllers
         public IActionResult CreateCategory([FromBody]Category category)
         {
             if (ModelState.IsValid)
-            { 
+            {
+                //IMAPPER.MAP(CATEVM, Category);
                 _categoryService.CreateCategory(category);
             }
             return Ok(category);

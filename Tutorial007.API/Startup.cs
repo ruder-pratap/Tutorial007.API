@@ -1,20 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DAL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using Tutorial007.API.Models;
-using Tutorial007.API.Services;
+using Services.CategoryService;
+using Services.MailService;
+using Services.UserService;
+using System.Text;
 
 namespace Tutorial007.API
 {
@@ -31,7 +28,7 @@ namespace Tutorial007.API
         public void ConfigureServices(IServiceCollection services)
         {
             //Configure EntityFrameworkCore With MySQL Server
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<ApplicationDBContext>(options =>
             {
                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection"));
 
@@ -43,7 +40,7 @@ namespace Tutorial007.API
                 options.Password.RequireDigit = true;
                 options.Password.RequiredLength = 5;
                 options.Password.RequireLowercase = true;
-            }).AddEntityFrameworkStores<ApplicationDbContext>()
+            }).AddEntityFrameworkStores<ApplicationDBContext>()
                 .AddDefaultTokenProviders();
 
             //jwt Authentication
@@ -55,21 +52,21 @@ namespace Tutorial007.API
             {
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = Configuration["AuthSettings:Audience"],
-                    ValidIssuer = Configuration["AuthSettings:Issuer"],
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    //ValidAudience = Configuration["AuthSettings:Audience"],
+                    //ValidIssuer = Configuration["AuthSettings:Issuer"],
                     RequireExpirationTime = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["AuthSettings:key"])),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["AuthSetting:key"])),
                     ValidateIssuerSigningKey = true
                 };
             });
 
-            services.AddScoped<IUserService, UserService>();
-            services.AddTransient<IMailService, SendGridMailService>();
-
+            services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IMailService, MailService>();
             services.AddTransient<ICategoryService, CategoryService>();
-            services.AddTransient<ISubCategoryService, SubCategoryService>();
+
+            //services.AddTransient<ISubCategoryService, SubCategoryService>();
 
             services.AddControllers();
         }

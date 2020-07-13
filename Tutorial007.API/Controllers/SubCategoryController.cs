@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tutorial007.API.Models;
-using Tutorial007.API.Services;
+using Model;
+using Services;
+using Services.SubCategoryService;
 
 namespace Tutorial007.API.Controllers
 {
