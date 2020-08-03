@@ -1,0 +1,88 @@
+ public async Task<UserManagerResponse> LoginUserAsync(LoginViewModel model)
+        {
+            var user = await userManager.FindByEmailAsync(model.Email);
+
+            if(user == null)
+            {
+                return new UserManagerResponse
+                {
+                    Message = "There is no user with that Email Address",
+                    IsSuccess = false,
+                };
+            }
+
+            var result = await userManager.CheckPasswordAsync(user,model.Password);
+
+            if(!result)
+            {
+                return new UserManagerResponse
+                {
+                    Message = "Invalid Password",
+                    IsSuccess = false,
+                };
+            }
+
+            var claim = new[]
+            {
+                new Claim("Email",model.Email),
+                new Claim(ClaimTypes.NameIdentifier,user.Id)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["AuthSetting:key"]));
+
+            var token = new JwtSecurityToken(
+               // issuer: configuration["AuthSetting:Audience"],
+               // audience: configuration["AuthSetting:Issuer"],
+                claims: claim,
+                expires: DateTime.Now.AddDays(30),
+                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+
+            string tokenAsString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return new UserManagerResponse
+            {
+                Message = tokenAsString,
+                IsSuccess = true,
+                ExpireDate = token.ValidTo
+            };
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+            services.AddAuthentication(auth => {
+                auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(option =>
+            {
+                option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                   //// ValidAudience = Configuration["AuthSetting:Audience"],
+                   // ValidIssuer = Configuration["AuthSetting:Issuer"],
+                    RequireExpirationTime = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["AuthSetting:key"])),
+                    ValidateIssuerSigningKey = true
+                };
+            });
+
+
+
+
+
+
+
+ "AuthSetting": {
+    "key": "My Security Key for security and authentication",
+    "Audience": "http://localhost:4200/",
+    "Issuer": "http://localhost:4200/"
+  }
